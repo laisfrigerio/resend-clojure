@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.0.1] - 2026-08-26
+
+- General updates and improvements.
+
 ## [0.1.3] - 2026-08-26
 
 - Use Admin PAT to authenticate Git to enable release.yaml workflow commit at main branch
