@@ -13,10 +13,17 @@ jobs:
       pull-requests: read   # <--- Adicione esta linha para liberar o acesso à API de PRs
 
     steps:
+      - name: Generate GitHub App Token
+        id: app_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.RESEND_CLOJURE_APP_ID }}
+          private-key: ${{ secrets.RESEND_CLOJURE_APP_PRIVATE_KEY }}
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.ADMIN_PAT }}
+          token: ${{ steps.app_token.outputs.token }}
           fetch-depth: 0 # Busca todo o histórico de tags do Git
 
       - name: Setup Java
