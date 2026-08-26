@@ -1,5 +1,5 @@
-(ns resend-clojure.unit.emails-test
-  "Unit tests for resend-clojure.emails.
+(ns resend.unit.emails-test
+  "Unit tests for resend.emails.
 
   All tests use MockAdapter – no real HTTP calls are made.
 
@@ -7,9 +7,9 @@
   - Resend email API: https://resend.com/docs/api-reference/emails/send-email"
   (:require [clojure.test :refer [deftest testing is]]
             [cheshire.core :as json]
-            [resend-clojure.api.emails :as emails]
-            [resend-clojure.internal.client :as client]
-            [resend-clojure.internal.http-mock-adapter :as mock]))
+            [resend.api.emails :as emails]
+            [resend.internal.client :as client]
+            [resend.internal.http-mock-adapter :as mock]))
 
 ;; ---------------------------------------------------------------------------
 ;; Test fixtures / helpers

@@ -1,9 +1,9 @@
-(ns resend-clojure.internal.http-mock-adapter
+(ns resend.internal.http-mock-adapter
   "A MockAdapter that avoids real HTTP calls in unit tests.
  
   Pattern: record captures the canned responses you want to return,
   plus a `calls` atom that logs every request for assertion."
-  (:require [resend-clojure.internal.http :as http]))
+  (:require [resend.internal.http :as http]))
 
 (defrecord MockAdapter
   ;; responses – vector of {:status int :body map} returned in order (cycles)

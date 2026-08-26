@@ -1,7 +1,7 @@
-(ns resend-clojure.internal.request
+(ns resend.internal.request
   (:require [cheshire.core :as json]
-            [resend-clojure.internal.http :as http]
-            [resend-clojure.internal.response :as response]))
+            [resend.internal.http :as http]
+            [resend.internal.response :as response]))
 
 (defn- auth-headers
   "Returns the Authorization header map required by every Resend API call."

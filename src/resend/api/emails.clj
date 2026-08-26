@@ -1,4 +1,4 @@
-(ns resend-clojure.api.emails
+(ns resend.api.emails
   "Emails resource – wraps the /emails Resend REST endpoints.
  
   Mirrors the interface of the official SDKs (Node, Python, Java, Go, etc.):
@@ -15,8 +15,8 @@
  
   References:
   - Resend send email API: https://resend.com/docs/api-reference/emails/send-email"
-  (:require [resend-clojure.internal.util :as util]
-            [resend-clojure.internal.request :as request]))
+  (:require [resend.internal.util :as util]
+            [resend.internal.request :as request]))
 
 (defn- validate-send-params!
   "Throws an ex-info if required fields are missing."
@@ -31,7 +31,7 @@
 (defn send!
   "Sends a single email.
  
-  `client`  – ResendClient created with `resend-clojure.internal.client/create-client`
+  `client`  – ResendClient created with `resend.internal.client/create-client`
   `params`  – map with the following keys:
  
     Required:

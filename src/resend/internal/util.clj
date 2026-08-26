@@ -1,4 +1,4 @@
-(ns resend-clojure.internal.util
+(ns resend.internal.util
   (:require [clojure.walk :as walk]
             [clojure.string :as str]))
 

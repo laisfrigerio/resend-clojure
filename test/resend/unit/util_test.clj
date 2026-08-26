@@ -1,6 +1,6 @@
-(ns resend-clojure.unit.util-test
+(ns resend.unit.util-test
   (:require [clojure.test :refer [deftest is testing]]
-            [resend-clojure.internal.util :as util]))
+            [resend.internal.util :as util]))
 
 ;; ---------------------------------------------------------------------------
 ;; clj->api

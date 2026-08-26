@@ -1,10 +1,10 @@
-(ns resend-clojure.internal.client
+(ns resend.internal.client
   "Constructs and holds the SDK client configuration.
  
   Following the pattern used by resend-node, resend-java, and other official
   SDKs, a single client record is created once (with the API key) and then
   threaded through every resource namespace call."
-  (:require [resend-clojure.internal.http :as http]))
+  (:require [resend.internal.http :as http]))
 
 (def ^:private default-base-url "https://api.resend.com")
 

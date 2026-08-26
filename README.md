@@ -48,13 +48,10 @@ You can also configure the client via an environment variable:
 #### Send an email
 
 ```clojure
-(require '[resend.emails :as emails])
-
-(emails/send! client
 (require '[resend.core :as resend]
-         '[resend.emails :as emails])
+         '[resend.api.emails :as emails])
 
-(def client (resend/create-client "re_xxxx...xxxxxx"))
+(def client (resend/create-client))
 
 (let [{:keys [data error]} (emails/send! client
                              {:from    "you@example.com"
@@ -136,7 +133,7 @@ You can also configure the client via an environment variable:
 #### Retrieve an email
 
 ```clojure
-(require '[resend.emails :as emails])
+(require '[resend.api.emails :as emails])
 
 (let [{:keys [data error]} (emails/get client "email-id-here")]
   (when data
@@ -171,18 +168,6 @@ All functions return a map with `:data` and `:error` keys. By default, no except
     (handle-success data)))
 ```
 
-If you prefer an exception-based style, use the `!`-suffixed throwing variants:
-
-```clj
-;; Throws an ExceptionInfo on API errors
-(try
-  (let [data (emails/send!! client params)]
-    (println "Sent:" (:id data)))
-  (catch clojure.lang.ExceptionInfo e
-    (println "API error:" (ex-message e))
-    (println "Details:"   (ex-data e))))
-```
-
 ## API Reference
 
 ### Emails
@@ -198,7 +183,7 @@ If you prefer an exception-based style, use the `!`-suffixed throwing variants:
 ### Contacts
 
 ```clojure
-(require '[resend.contacts :as contacts])
+(require '[resend.api.contacts :as contacts])
  
 ;; Create a contact
 (contacts/create! client "audience-id" {:email "user@example.com" :first-name "Alice"})
@@ -219,7 +204,7 @@ If you prefer an exception-based style, use the `!`-suffixed throwing variants:
 ### Audiences
  
 ```clojure
-(require '[resend.audiences :as audiences])
+(require '[resend.api.audiences :as audiences])
  
 ;; Create an audience
 (audiences/create! client {:name "Newsletter Subscribers"})
@@ -237,7 +222,7 @@ If you prefer an exception-based style, use the `!`-suffixed throwing variants:
 ### Broadcasts
  
 ```clojure
-(require '[resend.broadcasts :as broadcasts])
+(require '[resend.api.broadcasts :as broadcasts])
  
 ;; Create a broadcast
 (broadcasts/create! client
@@ -262,7 +247,7 @@ If you prefer an exception-based style, use the `!`-suffixed throwing variants:
 ### Domains
  
 ```clojure
-(require '[resend.domains :as domains])
+(require '[resend.api.domains :as domains])
  
 ;; Create a domain
 (domains/create! client {:name "example.com"})
@@ -286,7 +271,7 @@ If you prefer an exception-based style, use the `!`-suffixed throwing variants:
 ### API Keys
  
 ```clojure
-(require '[resend.api-keys :as api-keys])
+(require '[resend.api.api-keys :as api-keys])
  
 ;; Create an API key
 (api-keys/create! client {:name "Production Key" :permission "full_access"})
@@ -301,7 +286,7 @@ If you prefer an exception-based style, use the `!`-suffixed throwing variants:
 ### Webhooks
  
 ```clojure
-(require '[resend.webhooks :as webhooks])
+(require '[resend.api.webhooks :as webhooks])
  
 ;; Create a webhook
 (webhooks/create! client
@@ -325,7 +310,7 @@ If you prefer an exception-based style, use the `!`-suffixed throwing variants:
 `resend-clojure` uses [hato](https://github.com/gnarroway/hato) as the default HTTP client. You can plug in your own adapter by implementing the `HttpAdapter` protocol:
  
 ```clojure
-(require '[resend.http :refer [HttpAdapter]])
+(require '[resend.internal.http :refer [HttpAdapter]])
  
 (defrecord MyHttpAdapter []
   HttpAdapter

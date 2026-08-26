@@ -1,5 +1,5 @@
 
-(ns resend-clojure.integration.emails-test
+(ns resend.integration.emails-test
   "Integration tests that exercise the real Resend API.
  
   These tests are SKIPPED automatically when the RESEND_API_KEY environment
@@ -7,7 +7,7 @@
   without credentials.
  
   To run them locally:
-    RESEND_API_KEY=re_xxx lein test :only resend-clojure.emails-integration-test
+    RESEND_API_KEY=re_xxx lein test :only resend.emails-integration-test
  
   The :to address uses Resend's built-in test address that always succeeds
   without sending a real email: delivered@resend.dev
@@ -15,8 +15,8 @@
   References:
   - Resend test addresses: https://resend.com/docs/dashboard/emails/send-test-emails"
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [resend-clojure.core   :as resend]
-            [resend-clojure.api.emails :as emails]))
+            [resend.core   :as resend]
+            [resend.api.emails :as emails]))
 
 ;; ---------------------------------------------------------------------------
 ;; Guard – skip when no API key is present

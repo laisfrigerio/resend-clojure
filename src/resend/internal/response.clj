@@ -1,8 +1,8 @@
-(ns resend-clojure.internal.response
+(ns resend.internal.response
   "Converts raw HTTP responses into the {:data … :error …} envelope used by the SDK.
   Success: 2xx  → {:data <kebab-case map>  :error nil}
   Failure: 4xx+ → {:data nil :error <kebab-case map>}"
-  (:require [resend-clojure.internal.util :as util]))
+  (:require [resend.internal.util :as util]))
 
 (defn- success?
   "Returns true if the HTTP status code indicates success (2xx)."

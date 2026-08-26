@@ -1,4 +1,4 @@
-(ns resend-clojure.internal.http
+(ns resend.internal.http
   "Defines the IHttpAdapter protocol and the default hato-based implementation.
  
   Separating transport from business logic allows consumers to inject a
