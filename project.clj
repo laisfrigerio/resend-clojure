@@ -1,4 +1,4 @@
-(defproject net.clojars.laisfrigerio/resend-clojure "0.1.0-SNAPSHOT"
+(defproject net.clojars.laisfrigerio/resend-clojure "0.1.3"
   :description "Clojure wrapper for the Resend Email API"
   :url "https://github.com/laisfrigerio/resend-clojure"
   :license {:name "MIT"
