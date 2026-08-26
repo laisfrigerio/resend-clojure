@@ -2,7 +2,10 @@
 
 ## [1.0.1] - 2026-08-26
 
-- General updates and improvements.
+- Adding a default api-key overloading
+- Updating readme.md with the new api-key overloading implementation
+- Replacing resend-clojure namespace to just resend
+- Removing files within resend-clojure namespace
 
 ## [0.1.3] - 2026-08-26
 
