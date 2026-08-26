@@ -1,0 +1,40 @@
+name: Verify PR Changelog Section
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Changelog Section in PR Body
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = context.payload.pull_request.body || '';
+
+            // 1. Procura por qualquer header com a palavra Changelog (ex: # Changelog, ## Changelog)
+            const headerRegex = /^#{1,6}\s*Changelog\s*$/im;
+            const match = body.match(headerRegex);
+
+            if (!match) {
+              core.setFailed('O título "# Changelog" não foi encontrado na descrição do PR.');
+              return;
+            }
+
+            // 2. Pega tudo o que está DEPOIS do título do Changelog
+            const contentAfterHeader = body.substring(match.index + match[0].length);
+
+            // 3. Se houver outro header (# Próxima Seção) depois, corta nele
+            const nextHeaderIndex = contentAfterHeader.search(/^#{1,6}\s+/m);
+            const sectionContent = nextHeaderIndex !== -1 
+              ? contentAfterHeader.substring(0, nextHeaderIndex) 
+              : contentAfterHeader;
+
+            // 4. Valida se o conteúdo capturado contém texto real
+            if (!sectionContent.trim()) {
+              core.setFailed('A seção "# Changelog" está presente, mas o conteúdo está vazio!');
+            } else {
+              core.info('Seção de Changelog validada com sucesso!');
+            }

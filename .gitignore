@@ -1,0 +1,7 @@
+/.clj-kondo/.cache/*
+/.cpcache
+/dev
+/plan
+/target
+.env
+.lein-failures

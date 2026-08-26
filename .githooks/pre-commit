@@ -1,0 +1,29 @@
+#!/bin/bash
+
+echo ""
+echo "==> [pre-commit] Running lein lint-fix..."
+lein lint-fix
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] lint-fix failed. Commit aborted."
+  exit 1
+fi
+
+# Re-adiciona arquivos reformatados que já estavam staged
+git diff --name-only --cached | while IFS= read -r file; do
+  [ -f "$file" ] && git add "$file"
+done
+
+echo ""
+echo "==> [pre-commit] Running lein test..."
+lein test
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] Tests failed. Commit aborted."
+  exit 1
+fi
+
+echo ""
+echo "==> [pre-commit] All checks passed!"

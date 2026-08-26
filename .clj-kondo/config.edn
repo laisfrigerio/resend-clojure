@@ -1,0 +1,4 @@
+{:linters {:unused-namespace {:level :warning}
+           :unused-binding   {:level :warning}
+           :redefined-var    {:level :error}
+           :unresolved-symbol {:level :error}}}

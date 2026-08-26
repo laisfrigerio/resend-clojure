@@ -1,0 +1,156 @@
+name: Release Library to Clojars
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Dispara ao subir tags como v1.0.0, v2.1.0, etc.
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Necessário para comitar CHANGELOG.md e project.clj de volta
+      pull-requests: read   # <--- Adicione esta linha para liberar o acesso à API de PRs
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Busca todo o histórico de tags do Git
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Clojure / Leiningen
+        uses: DeLaGuardo/setup-clojure@5.0
+        with:
+          cli: 'latest'
+          lein: 'latest'
+
+      - name: Extract Clean Version from Tag
+        id: get_version
+        run: |
+          # Remove o prefixo 'v' da tag (ex: v1.2.0 -> 1.2.0)
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Extract PR Changelogs & Update CHANGELOG.md
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const version = '${{ steps.get_version.outputs.VERSION }}';
+            const date = new Date().toISOString().split('T')[0];
+
+            // 1. Busca tags existentes
+            const tags = await github.rest.repos.listTags({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 2
+            });
+
+            let prsToProcess = [];
+
+            if (tags.data.length > 1) {
+              // Se existe tag anterior, compara o intervalo
+              const baseRef = tags.data[1].name;
+              const comparison = await github.rest.repos.compareCommitsWithBasehead({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                basehead: `${baseRef}...${context.ref}`
+              });
+
+              // Extrai os números dos PRs das mensagens de commit de merge (ex: "Merge pull request #2...")
+              for (const commit of comparison.data.commits) {
+                const match = commit.commit.message.match(/Merge pull request #(\d+)/);
+                if (match) {
+                  prsToProcess.push(parseInt(match[1], 10));
+                }
+              }
+            } else {
+              // PRIMEIRO RELEASE: Busca os últimos PRs fechados/mergeados na main
+              const prs = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: context.sha
+              });
+
+              // Pega todos os PRs recentes já mergeados na main
+              const allMergedPRs = await github.rest.pulls.list({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'closed',
+                base: 'main',
+                per_page: 50
+              });
+
+              prsToProcess = allMergedPRs.data
+                .filter(pr => pr.merged_at)
+                .map(pr => pr.number);
+            }
+
+            // 2. Coleta o texto da seção "# Changelog" de cada PR encontrado
+            let prLogs = [];
+            for (const prNumber of prsToProcess) {
+              const pr = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+
+              const body = pr.data.body || '';
+              // Busca a seção Changelog no corpo do PR
+              const headerMatch = body.match(/^#{1,6}\s*Changelog\s*$/im);
+              if (headerMatch) {
+                const contentAfter = body.substring(headerMatch.index + headerMatch[0].length);
+                const nextHeader = contentAfter.search(/^#{1,6}\s+/m);
+                const section = nextHeader !== -1 ? contentAfter.substring(0, nextHeader) : contentAfter;
+                
+                const trimmed = section.trim();
+                if (trimmed && !prLogs.includes(trimmed)) {
+                  prLogs.push(trimmed);
+                }
+              }
+            }
+
+            if (prLogs.length === 0) {
+              prLogs.push("- General updates and improvements.");
+            }
+
+            // 3. Atualiza o arquivo CHANGELOG.md
+            const newReleaseSection = `## [${version}] - ${date}\n\n${prLogs.join('\n\n')}\n\n`;
+            let currentContent = '';
+            
+            if (fs.existsSync('CHANGELOG.md')) {
+              currentContent = fs.readFileSync('CHANGELOG.md', 'utf8');
+            } else {
+              currentContent = '# Changelog\n\n';
+            }
+
+            const updatedContent = currentContent.replace(/(#\s*Changelog[\r\n]+)/i, `$1${newReleaseSection}`);
+            fs.writeFileSync('CHANGELOG.md', updatedContent);
+
+      - name: Update project.clj version
+        run: |
+          NEW_VERSION="${{ steps.get_version.outputs.VERSION }}"
+          echo "Updating project.clj to version $NEW_VERSION"
+          # Update the main version string in defproject
+          lein change version set "\"$NEW_VERSION\""
+
+      - name: Deploy to Clojars
+        env:
+          CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
+          CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
+        run: |
+          # Deploy the library to Clojars using Leiningen
+          lein deploy clojars
+
+      - name: Commit Updated Files Back to Main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md project.clj
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore(release): update CHANGELOG and project.clj for ${{ steps.get_version.outputs.VERSION }} [skip ci]" && git push origin HEAD:main)
