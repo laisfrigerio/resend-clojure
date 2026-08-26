@@ -16,6 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.ADMIN_PAT }}
           fetch-depth: 0 # Busca todo o histórico de tags do Git
 
       - name: Setup Java
