@@ -1,5 +1,6 @@
 # Resend Clojure SDK
 
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Clojars Version](https://img.shields.io/clojars/v/net.clojars.laisfrigerio/resend-clojure.svg)](https://clojars.org/net.clojars.laisfrigerio/resend-clojure)
 [![CI](https://github.com/laisfrigerio/resend-clojure/actions/workflows/ci.yml/badge.svg)](https://github.com/laisfrigerio/resend-clojure/actions)
