@@ -94,14 +94,20 @@ You can also configure the client via an environment variable:
 #### Send email with attachments
 
 ```clj
+(def client (resend/create-client))
+
+(defn file->base64 [path]
+  (.encodeToString (java.util.Base64/getEncoder)
+                   (java.nio.file.Files/readAllBytes
+                     (.toPath (java.io.File. path)))))
+
 (emails/send! client
   {:from        "you@example.com"
    :to          ["user@gmail.com"]
    :subject     "Invoice attached"
    :html        "<p>Please find your invoice attached.</p>"
    :attachments [{:filename "invoice.pdf"
-                  :content  (java.util.Base64/getEncoder
-                              (.encodeToString (slurp "invoice.pdf")))}]})
+                  :content  (file->base64 "invoice.pdf")}]})
 ```
 
 #### Send email with tags
