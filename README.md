@@ -178,13 +178,18 @@ All functions return a map with `:data` and `:error` keys. By default, no except
 
 ### Emails
  
-| Function | Description |
-|---|---|
-| `emails/send!` | Send an email |
-| `emails/send-batch!` | Send a batch of up to 100 emails |
-| `emails/get` | Retrieve a sent email by ID |
-| `emails/update!` | Update a scheduled email |
-| `emails/cancel!` | Cancel a scheduled email |
+| Function                   | Description                      |
+|----------------------------|----------------------------------|
+| `emails/send!`             | Send an email                    |
+| `emails/send-batch!`       | Send a batch of up to 100 emails |
+| `emails/get`               | Retrieve a sent email by ID      |  
+| `emails/list-emails`       | Retrieve a list of emails sent   |
+| `emails/update!`           | Update a scheduled email         |
+| `emails/cancel!`           | Cancel a scheduled email         |
+| `emails/share-email!`      | Create a shareable link to view a sent or received email |
+| `emails/get-attachment!`   | Retrieve a single attachment from a sent email |
+| `emails/list-attachments!` | Retrieve a list of attachments from a sent email. |
+| `emails/get-metrics! `     | Retrieve account-level email metrics |
 
 ### Contacts
 
@@ -421,6 +426,50 @@ lein test
 lein lint       # check only
 lein lint-fix   # check and auto-fix
 ```
+
+### Interactive Dev Script (Babashka)
+
+The `dev/` directory contains an interactive [Babashka](https://babashka.org) script to exercise the emails API against a real Resend account.
+
+**Prerequisites:** Install Babashka:
+
+```bash
+brew install borkdude/brew/babashka
+```
+
+**Run:**
+
+```bash
+export RESEND_API_KEY=re_xxxx...xxxxxx
+cd dev
+bb email_api.clj
+```
+
+The script uses `dev/bb.edn` to load the library from the local root (`../`), so any local changes are reflected immediately without rebuilding or publishing.
+
+> Note: To view other installation options, visit the babashka repository: https://github.com/babashka/babashka#installation
+
+## Releasing a New Version
+
+Releases are fully automated via GitHub Actions. To publish a new version to [Clojars](https://clojars.org):
+
+1. Ensure all changes are merged to `main`.
+2. Create and push a version tag following [SemVer](https://semver.org):
+
+```bash
+git tag v1.2.0
+git push origin v1.2.0
+```
+
+The [release workflow](.github/workflows/release.yml) will automatically:
+
+- Extract the version number from the tag
+- Update `project.clj` with the new version
+- Collect PR changelogs and update `CHANGELOG.md`
+- Deploy the library to Clojars
+- Commit the updated files back to `main`
+
+> **Note:** The `CLOJARS_USERNAME` and `CLOJARS_PASSWORD` secrets must be configured in the repository settings.
 
 ## License
 
