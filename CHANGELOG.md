@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.1.0] - 2026-09-01
+
+- Updating changelog.md file
+
 ## [1.0.1] - 2026-08-26
 
 - Adding a default api-key overloading
