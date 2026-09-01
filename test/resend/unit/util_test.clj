@@ -121,3 +121,42 @@
   (testing "false values are retained (falsy ≠ nil)"
     (is (= {:active false}
            (util/remove-nils {:active false :gone nil})))))
+
+;; ---------------------------------------------------------------------------
+;; build-query-string
+;; ---------------------------------------------------------------------------
+
+(deftest build-query-string-nil-returns-empty
+  (testing "nil params returns empty string"
+    (is (= "" (util/build-query-string nil)))))
+
+(deftest build-query-string-empty-map-returns-empty
+  (testing "empty map returns empty string"
+    (is (= "" (util/build-query-string {})))))
+
+(deftest build-query-string-single-scalar
+  (testing "single scalar param produces ?key=value"
+    (is (= "?limit=10" (util/build-query-string {:limit 10})))))
+
+(deftest build-query-string-kebab-to-snake
+  (testing "kebab-case keys are converted to snake_case"
+    (let [qs (util/build-query-string {:start-date "2026-07-01"})]
+      (is (clojure.string/includes? qs "start_date="))
+      (is (not (clojure.string/includes? qs "start-date="))))))
+
+(deftest build-query-string-sequential-values-repeated
+  (testing "sequential values produce repeated params"
+    (let [qs (util/build-query-string {:metrics ["sent" "delivered"]})]
+      (is (clojure.string/includes? qs "metrics=sent"))
+      (is (clojure.string/includes? qs "metrics=delivered")))))
+
+(deftest build-query-string-nil-values-omitted
+  (testing "nil values are omitted from the query string"
+    (let [qs (util/build-query-string {:limit 5 :after nil})]
+      (is (clojure.string/includes? qs "limit=5"))
+      (is (not (clojure.string/includes? qs "after"))))))
+
+(deftest build-query-string-starts-with-question-mark
+  (testing "non-empty params string starts with ?"
+    (is (clojure.string/starts-with?
+         (util/build-query-string {:limit 1}) "?"))))
