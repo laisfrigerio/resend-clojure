@@ -1,6 +1,6 @@
 /.clj-kondo/.cache/*
 /.cpcache
-/dev
+/local_dev
 /plan
 /target
 .env

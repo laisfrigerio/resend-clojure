@@ -50,3 +50,32 @@
   [body]
   (->> body
        (transform-keys kebab->snake)))
+
+(defn- key->param-name [k]
+  (str/replace (name k) "-" "_"))
+
+(defn- encode-value [v]
+  (java.net.URLEncoder/encode (str v) "UTF-8"))
+
+(defn- expand-param [[k v]]
+  (let [param-name (key->param-name k)
+        values     (if (sequential? v) v [v])]
+    (map #(str param-name "=" (encode-value %)) values)))
+
+(defn build-query-string
+  "Builds a URL query string from a map of params.
+  Keys are converted from kebab-case keywords to snake_case strings.
+  Sequential values are serialised as repeated params (key=a&key=b).
+  Returns an empty string when params is nil or empty.
+ 
+  Example:
+    (build-query-string {:limit 10 :domain-id [\"abc\" \"def\"]})
+    ;; => \"?limit=10&domain_id=abc&domain_id=def\""
+  [params]
+  (let [clean (remove-nils (or params {}))]
+    (if (seq clean)
+      (->> clean
+           (mapcat expand-param)
+           (str/join "&")
+           (str "?"))
+      "")))

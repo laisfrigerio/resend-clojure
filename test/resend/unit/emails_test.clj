@@ -218,3 +218,227 @@
       (emails/cancel-email! client email-id)
       (is (= (str base-url "/emails/" email-id "/cancel")
              (:url (mock/last-call adapter)))))))
+
+;; ---------------------------------------------------------------------------
+;; emails/list-emails!
+;; ---------------------------------------------------------------------------
+
+(deftest list-emails-uses-get-method
+  (testing "list-emails issues a GET request"
+    (let [adapter (mock/make-mock-adapter
+                   [{:status 200 :body {:object "list" :has_more false :data []}}])
+          client  (create-client-with adapter)]
+      (emails/list-emails! client)
+      (is (= :get (:method (mock/last-call adapter)))))))
+
+(deftest list-emails-hits-correct-url-no-params
+  (testing "list-emails without params targets GET /emails"
+    (let [adapter (mock/make-mock-adapter
+                   [{:status 200 :body {:object "list" :has_more false :data []}}])
+          client  (create-client-with adapter)]
+      (emails/list-emails! client)
+      (is (= (str base-url "/emails")
+             (:url (mock/last-call adapter)))))))
+
+(deftest list-emails-appends-query-params
+  (testing "list-emails appends limit as query param"
+    (let [adapter (mock/make-mock-adapter
+                   [{:status 200 :body {:object "list" :has_more false :data []}}])
+          client  (create-client-with adapter)]
+      (emails/list-emails! client {:limit 10})
+      (is (= (str base-url "/emails?limit=10")
+             (:url (mock/last-call adapter)))))))
+
+(deftest list-emails-returns-data-envelope
+  (testing "list-emails returns success envelope with list data"
+    (let [adapter (mock/make-mock-adapter
+                   [{:status 200
+                     :body   {:object "list" :has_more false
+                              :data   [{:id "id-1" :subject "Hi"}]}}])
+          client  (create-client-with adapter)
+          result  (emails/list-emails! client)]
+      (is (nil? (:error result)))
+      (is (= "list" (get-in result [:data :object]))))))
+
+;; ---------------------------------------------------------------------------
+;; emails/share-email!
+;; ---------------------------------------------------------------------------
+
+(deftest share-email-uses-post-method
+  (testing "share-email issues a POST request"
+    (let [email-id "49a3999c-0ce1-4ea6-ab68-e08835cf401e"
+          adapter  (mock/make-mock-adapter
+                    [{:status 200 :body {:object "email" :id email-id
+                                         :url "https://resend.com/shared?token=abc"}}])
+          client   (create-client-with adapter)]
+      (emails/share-email! client email-id)
+      (is (= :post (:method (mock/last-call adapter)))))))
+
+(deftest share-email-hits-correct-url
+  (testing "share-email targets POST /emails/:id/share"
+    (let [email-id "49a3999c-0ce1-4ea6-ab68-e08835cf401e"
+          adapter  (mock/make-mock-adapter
+                    [{:status 200 :body {:object "email" :id email-id :url "https://resend.com/shared?token=abc"}}])
+          client   (create-client-with adapter)]
+      (emails/share-email! client email-id)
+      (is (= (str base-url "/emails/" email-id "/share")
+             (:url (mock/last-call adapter)))))))
+
+(deftest share-email-sends-expires-in-as-snake-case
+  (testing "share-email serialises :expires-in as expires_in"
+    (let [email-id "49a3999c-0ce1-4ea6-ab68-e08835cf401e"
+          adapter  (mock/make-mock-adapter
+                    [{:status 200 :body {:object "email" :id email-id :url "https://resend.com/shared?token=abc"}}])
+          client   (create-client-with adapter)]
+      (emails/share-email! client email-id {:expires-in "2 hours"})
+      (let [body (json/parse-string (:body (mock/last-call adapter)) true)]
+        (is (= "2 hours" (:expires_in body)))))))
+
+(deftest share-email-sends-no-body-when-no-params
+  (testing "share-email sends no body when params are omitted"
+    (let [email-id "49a3999c-0ce1-4ea6-ab68-e08835cf401e"
+          adapter  (mock/make-mock-adapter
+                    [{:status 200 :body {:object "email" :id email-id :url "https://resend.com/shared?token=abc"}}])
+          client   (create-client-with adapter)]
+      (emails/share-email! client email-id)
+      (is (nil? (:body (mock/last-call adapter)))))))
+
+(deftest share-email-returns-url
+  (testing "share-email returns a shareable URL in :data"
+    (let [email-id "49a3999c-0ce1-4ea6-ab68-e08835cf401e"
+          share-url "https://resend.com/shared?token=abc123"
+          adapter  (mock/make-mock-adapter
+                    [{:status 200 :body {:object "email" :id email-id :url share-url}}])
+          client   (create-client-with adapter)
+          result   (emails/share-email! client email-id)]
+      (is (nil? (:error result)))
+      (is (= share-url (get-in result [:data :url]))))))
+
+;; ---------------------------------------------------------------------------
+;; emails/get-attachment!
+;; ---------------------------------------------------------------------------
+
+(deftest get-attachment-uses-get-method
+  (testing "get-attachment issues a GET request"
+    (let [email-id      "4ef9a417-02e9-4d39-ad75-9611e0fcc33c"
+          attachment-id "2a0c9ce0-3112-4728-976e-47ddcd16a318"
+          adapter       (mock/make-mock-adapter
+                         [{:status 200 :body {:object "attachment" :id attachment-id
+                                              :filename "avatar.png"}}])
+          client        (create-client-with adapter)]
+      (emails/get-attachment! client email-id attachment-id)
+      (is (= :get (:method (mock/last-call adapter)))))))
+
+(deftest get-attachment-hits-correct-url
+  (testing "get-attachment targets GET /emails/:email_id/attachments/:id"
+    (let [email-id      "4ef9a417-02e9-4d39-ad75-9611e0fcc33c"
+          attachment-id "2a0c9ce0-3112-4728-976e-47ddcd16a318"
+          adapter       (mock/make-mock-adapter
+                         [{:status 200 :body {:object "attachment" :id attachment-id
+                                              :filename "avatar.png"}}])
+          client        (create-client-with adapter)]
+      (emails/get-attachment! client email-id attachment-id)
+      (is (= (str base-url "/emails/" email-id "/attachments/" attachment-id)
+             (:url (mock/last-call adapter)))))))
+
+(deftest get-attachment-returns-data-envelope
+  (testing "get-attachment returns attachment data in :data key"
+    (let [email-id      "4ef9a417-02e9-4d39-ad75-9611e0fcc33c"
+          attachment-id "2a0c9ce0-3112-4728-976e-47ddcd16a318"
+          adapter       (mock/make-mock-adapter
+                         [{:status 200
+                           :body   {:object       "attachment"
+                                    :id           attachment-id
+                                    :filename     "avatar.png"
+                                    :content_type "image/png"}}])
+          client        (create-client-with adapter)
+          result        (emails/get-attachment! client email-id attachment-id)]
+      (is (nil? (:error result)))
+      (is (= attachment-id (get-in result [:data :id])))
+      (is (= "avatar.png" (get-in result [:data :filename]))))))
+
+;; ---------------------------------------------------------------------------
+;; emails/list-attachments!
+;; ---------------------------------------------------------------------------
+
+(deftest list-attachments-uses-get-method
+  (testing "list-attachments issues a GET request"
+    (let [email-id "4ef9a417-02e9-4d39-ad75-9611e0fcc33c"
+          adapter  (mock/make-mock-adapter
+                    [{:status 200 :body {:object "list" :has_more false :data []}}])
+          client   (create-client-with adapter)]
+      (emails/list-attachments! client email-id)
+      (is (= :get (:method (mock/last-call adapter)))))))
+
+(deftest list-attachments-hits-correct-url
+  (testing "list-attachments targets GET /emails/:email_id/attachments"
+    (let [email-id "4ef9a417-02e9-4d39-ad75-9611e0fcc33c"
+          adapter  (mock/make-mock-adapter
+                    [{:status 200 :body {:object "list" :has_more false :data []}}])
+          client   (create-client-with adapter)]
+      (emails/list-attachments! client email-id)
+      (is (= (str base-url "/emails/" email-id "/attachments")
+             (:url (mock/last-call adapter)))))))
+
+(deftest list-attachments-appends-query-params
+  (testing "list-attachments appends limit as query param"
+    (let [email-id "4ef9a417-02e9-4d39-ad75-9611e0fcc33c"
+          adapter  (mock/make-mock-adapter
+                    [{:status 200 :body {:object "list" :has_more false :data []}}])
+          client   (create-client-with adapter)]
+      (emails/list-attachments! client email-id {:limit 5})
+      (is (= (str base-url "/emails/" email-id "/attachments?limit=5")
+             (:url (mock/last-call adapter)))))))
+
+;; ---------------------------------------------------------------------------
+;; emails/get-metrics!
+;; ---------------------------------------------------------------------------
+
+(deftest get-metrics-uses-get-method
+  (testing "get-metrics issues a GET request"
+    (let [adapter (mock/make-mock-adapter
+                   [{:status 200 :body {:object "metrics" :totals {:sent 100}}}])
+          client  (create-client-with adapter)]
+      (emails/get-metrics! client)
+      (is (= :get (:method (mock/last-call adapter)))))))
+
+(deftest get-metrics-hits-correct-url-no-params
+  (testing "get-metrics without params targets GET /emails/metrics"
+    (let [adapter (mock/make-mock-adapter
+                   [{:status 200 :body {:object "metrics" :totals {:sent 100}}}])
+          client  (create-client-with adapter)]
+      (emails/get-metrics! client)
+      (is (= (str base-url "/emails/metrics")
+             (:url (mock/last-call adapter)))))))
+
+(deftest get-metrics-appends-scalar-query-params
+  (testing "get-metrics appends scalar params like start_date"
+    (let [adapter (mock/make-mock-adapter
+                   [{:status 200 :body {:object "metrics" :totals {:sent 100}}}])
+          client  (create-client-with adapter)]
+      (emails/get-metrics! client {:start-date "2026-07-01"})
+      (let [url (:url (mock/last-call adapter))]
+        (is (clojure.string/includes? url "start_date=2026-07-01"))))))
+
+(deftest get-metrics-serialises-array-params-as-repeated
+  (testing "get-metrics repeats array params (metrics=sent&metrics=delivered)"
+    (let [adapter (mock/make-mock-adapter
+                   [{:status 200 :body {:object "metrics" :totals {:sent 100 :delivered 90}}}])
+          client  (create-client-with adapter)]
+      (emails/get-metrics! client {:metrics ["sent" "delivered"]})
+      (let [url (:url (mock/last-call adapter))]
+        (is (clojure.string/includes? url "metrics=sent"))
+        (is (clojure.string/includes? url "metrics=delivered"))))))
+
+(deftest get-metrics-returns-data-envelope
+  (testing "get-metrics returns metrics data in :data key"
+    (let [adapter (mock/make-mock-adapter
+                   [{:status 200
+                     :body   {:object "metrics"
+                              :totals {:sent 1204 :delivered 1180}
+                              :data   []}}])
+          client  (create-client-with adapter)
+          result  (emails/get-metrics! client)]
+      (is (nil? (:error result)))
+      (is (= "metrics" (get-in result [:data :object])))
+      (is (= 1204 (get-in result [:data :totals :sent]))))))
